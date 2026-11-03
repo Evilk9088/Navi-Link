@@ -914,6 +914,8 @@ public class FloatingWindowManager {
             if (clusterActiveWindow != null && clusterFloatingView != null) {
                 clusterActiveWindow.updateTmcData(tmcJson);
             }
+            // TMC 细条显隐会改变窗口高度，固定尺寸的窗口需要重新测量
+            remeasureWindow();
         }
     }
 
@@ -1519,6 +1521,8 @@ public class FloatingWindowManager {
             }
         }
         checkAndUpdateOverspeed();
+        // 区间测速胶囊显隐会改变窗口高度，固定尺寸的窗口需要重新测量
+        remeasureWindow();
     }
     public void updateCrossMapStatus(int hasCrossMap) {
         if (cachedCrossMap == hasCrossMap) return;
