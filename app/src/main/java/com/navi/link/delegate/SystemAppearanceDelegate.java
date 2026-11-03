@@ -18,11 +18,11 @@ import com.google.android.material.card.MaterialCardView;
 public class SystemAppearanceDelegate {
     private final MainActivity activity;
 
-    private MaterialCardView cardNormal, cardMinimal, cardFull;
-    private RadioButton rbNormal, rbMinimal, rbFull;
+    private MaterialCardView cardNormal, cardMinimal, cardFull, cardRibbon;
+    private RadioButton rbNormal, rbMinimal, rbFull, rbRibbon;
     
-    private MaterialCardView cardCruiseNormal, cardCruiseMinimal, cardCruiseFull;
-    private RadioButton rbCruiseNormal, rbCruiseMinimal, rbCruiseFull;
+    private MaterialCardView cardCruiseNormal, cardCruiseMinimal, cardCruiseFull, cardCruiseRibbon;
+    private RadioButton rbCruiseNormal, rbCruiseMinimal, rbCruiseFull, rbCruiseRibbon;
     
     private MaterialCardView cardDayNightFollow, cardDayNightDay, cardDayNightNight;
     private RadioButton rbDayNightFollow, rbDayNightDay, rbDayNightNight;
@@ -60,14 +60,18 @@ public class SystemAppearanceDelegate {
         rbNormal = activity.findViewById(R.id.rb_normal);
         rbMinimal = activity.findViewById(R.id.rb_minimal);
         rbFull = activity.findViewById(R.id.rb_full);
+        cardRibbon = activity.findViewById(R.id.card_ribbon);
+        rbRibbon = activity.findViewById(R.id.rb_ribbon);
         
         cardCruiseNormal = activity.findViewById(R.id.card_cruise_normal);
         cardCruiseMinimal = activity.findViewById(R.id.card_cruise_minimal);
         cardCruiseFull = activity.findViewById(R.id.card_cruise_full);
+        cardCruiseRibbon = activity.findViewById(R.id.card_cruise_ribbon);
         
         rbCruiseNormal = activity.findViewById(R.id.rb_cruise_normal);
         rbCruiseMinimal = activity.findViewById(R.id.rb_cruise_minimal);
         rbCruiseFull = activity.findViewById(R.id.rb_cruise_full);
+        rbCruiseRibbon = activity.findViewById(R.id.rb_cruise_ribbon);
 
         cardDayNightFollow = activity.findViewById(R.id.card_day_night_follow);
         cardDayNightDay = activity.findViewById(R.id.card_day_night_day);
@@ -123,10 +127,12 @@ public class SystemAppearanceDelegate {
         if (cardNormal != null) cardNormal.setOnClickListener(v -> activity.selectStyle(0));
         if (cardMinimal != null) cardMinimal.setOnClickListener(v -> activity.selectStyle(1));
         if (cardFull != null) cardFull.setOnClickListener(v -> activity.selectStyle(2));
+        if (cardRibbon != null) cardRibbon.setOnClickListener(v -> activity.selectStyle(3));
         
         if (cardCruiseNormal != null) cardCruiseNormal.setOnClickListener(v -> activity.selectCruiseStyle(0));
         if (cardCruiseMinimal != null) cardCruiseMinimal.setOnClickListener(v -> activity.selectCruiseStyle(1));
         if (cardCruiseFull != null) cardCruiseFull.setOnClickListener(v -> activity.selectCruiseStyle(2));
+        if (cardCruiseRibbon != null) cardCruiseRibbon.setOnClickListener(v -> activity.selectCruiseStyle(3));
 
         if (cardDayNightFollow != null) cardDayNightFollow.setOnClickListener(v -> activity.selectDayNightOption(0));
         if (cardDayNightDay != null) cardDayNightDay.setOnClickListener(v -> activity.selectDayNightOption(1));
@@ -289,24 +295,28 @@ public class SystemAppearanceDelegate {
         if (rbNormal != null) rbNormal.setChecked(activity.styleMode == 0);
         if (rbMinimal != null) rbMinimal.setChecked(activity.styleMode == 1);
         if (rbFull != null) rbFull.setChecked(activity.styleMode == 2);
+        if (rbRibbon != null) rbRibbon.setChecked(activity.styleMode == 3);
         
         int accentColor = activity.getAccentColor();
         int defaultStroke = activity.getThemeColorAttr(R.attr.panelCardStrokeColor);
         if (cardNormal != null) cardNormal.setStrokeColor(activity.styleMode == 0 ? accentColor : defaultStroke);
         if (cardMinimal != null) cardMinimal.setStrokeColor(activity.styleMode == 1 ? accentColor : defaultStroke);
         if (cardFull != null) cardFull.setStrokeColor(activity.styleMode == 2 ? accentColor : defaultStroke);
+        if (cardRibbon != null) cardRibbon.setStrokeColor(activity.styleMode == 3 ? accentColor : defaultStroke);
     }
     
     public void updateCruiseStyleSelection() {
         if (rbCruiseNormal != null) rbCruiseNormal.setChecked(activity.cruiseStyleMode == 0);
         if (rbCruiseMinimal != null) rbCruiseMinimal.setChecked(activity.cruiseStyleMode == 1);
         if (rbCruiseFull != null) rbCruiseFull.setChecked(activity.cruiseStyleMode == 2);
+        if (rbCruiseRibbon != null) rbCruiseRibbon.setChecked(activity.cruiseStyleMode == 3);
         
         int accentColor = activity.getAccentColor();
         int defaultStroke = activity.getThemeColorAttr(R.attr.panelCardStrokeColor);
         if (cardCruiseNormal != null) cardCruiseNormal.setStrokeColor(activity.cruiseStyleMode == 0 ? accentColor : defaultStroke);
         if (cardCruiseMinimal != null) cardCruiseMinimal.setStrokeColor(activity.cruiseStyleMode == 1 ? accentColor : defaultStroke);
         if (cardCruiseFull != null) cardCruiseFull.setStrokeColor(activity.cruiseStyleMode == 2 ? accentColor : defaultStroke);
+        if (cardCruiseRibbon != null) cardCruiseRibbon.setStrokeColor(activity.cruiseStyleMode == 3 ? accentColor : defaultStroke);
     }
 
     public void updateDayNightSelection() {
@@ -403,11 +413,13 @@ public class SystemAppearanceDelegate {
         if (cardNormal != null) cardNormal.setStrokeColor(sMode == 0 ? accentColor : Color.parseColor("#444444"));
         if (cardMinimal != null) cardMinimal.setStrokeColor(sMode == 1 ? accentColor : Color.parseColor("#444444"));
         if (cardFull != null) cardFull.setStrokeColor(sMode == 2 ? accentColor : Color.parseColor("#444444"));
+        if (cardRibbon != null) cardRibbon.setStrokeColor(sMode == 3 ? accentColor : Color.parseColor("#444444"));
 
         int cMode = activity.cruiseStyleMode;
         if (cardCruiseNormal != null) cardCruiseNormal.setStrokeColor(cMode == 0 ? accentColor : Color.parseColor("#444444"));
         if (cardCruiseMinimal != null) cardCruiseMinimal.setStrokeColor(cMode == 1 ? accentColor : Color.parseColor("#444444"));
         if (cardCruiseFull != null) cardCruiseFull.setStrokeColor(cMode == 2 ? accentColor : Color.parseColor("#444444"));
+        if (cardCruiseRibbon != null) cardCruiseRibbon.setStrokeColor(cMode == 3 ? accentColor : Color.parseColor("#444444"));
         
         RadioButton rbServiceOnlyView = activity.findViewById(R.id.rb_service_only);
         RadioButton rbNormalStartView = activity.findViewById(R.id.rb_normal_start);
@@ -422,6 +434,7 @@ public class SystemAppearanceDelegate {
         if (rbNormalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbNormalView, accentColorStateList);
         if (rbMinimalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbMinimalView, accentColorStateList);
         if (rbFullView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbFullView, accentColorStateList);
+        if (rbRibbon != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbRibbon, accentColorStateList);
 
         RadioButton rbCruiseNormalView = activity.findViewById(R.id.rb_cruise_normal);
         RadioButton rbCruiseMinimalView = activity.findViewById(R.id.rb_cruise_minimal);
@@ -429,6 +442,7 @@ public class SystemAppearanceDelegate {
         if (rbCruiseNormalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseNormalView, accentColorStateList);
         if (rbCruiseMinimalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseMinimalView, accentColorStateList);
         if (rbCruiseFullView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseFullView, accentColorStateList);
+        if (rbCruiseRibbon != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseRibbon, accentColorStateList);
 
         if (rbDayNightFollow != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbDayNightFollow, accentColorStateList);
         if (rbDayNightDay != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbDayNightDay, accentColorStateList);

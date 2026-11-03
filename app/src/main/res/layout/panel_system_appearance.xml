@@ -334,19 +334,24 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_marginHorizontal="16dp"
+                <HorizontalScrollView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:scrollbars="none"
+                    android:clipToPadding="false">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_normal"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
@@ -386,9 +391,8 @@
                         android:id="@+id/card_minimal"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
@@ -428,9 +432,9 @@
                         android:id="@+id/card_full"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
                         app:cardElevation="0dp"
@@ -464,7 +468,48 @@
                                 android:text="竖版完整" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_ribbon"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:layout_width="116dp"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/panelCardBgColor"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/panelCardStrokeColor"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <RadioButton
+                                android:id="@+id/rb_ribbon"
+                                android:textSize="13sp"
+                                android:textColor="?attr/panelTextColorPrimary"
+                                android:clickable="false"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="丝带导航"
+                                android:buttonTint="#FF4FC3F7" />
+
+                            <TextView
+                                android:textSize="10sp"
+                                android:textColor="?attr/panelTextColorSecondary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:text="分色丝带" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </HorizontalScrollView>
 
                 <View
                     android:layout_width="match_parent"
@@ -483,19 +528,24 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_marginHorizontal="16dp"
+                <HorizontalScrollView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:scrollbars="none"
+                    android:clipToPadding="false">
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_cruise_normal"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
@@ -535,9 +585,8 @@
                         android:id="@+id/card_cruise_minimal"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
@@ -577,9 +626,9 @@
                         android:id="@+id/card_cruise_full"
                         android:focusable="true"
                         android:clickable="true"
-                        android:layout_width="0dp"
+                        android:layout_width="116dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
                         app:cardBackgroundColor="?attr/panelCardBgColor"
                         app:cardCornerRadius="10dp"
                         app:cardElevation="0dp"
@@ -613,7 +662,48 @@
                                 android:text="竖版完整" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_cruise_ribbon"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:layout_width="116dp"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/panelCardBgColor"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/panelCardStrokeColor"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <RadioButton
+                                android:id="@+id/rb_cruise_ribbon"
+                                android:textSize="13sp"
+                                android:textColor="?attr/panelTextColorPrimary"
+                                android:clickable="false"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="丝带巡航"
+                                android:buttonTint="#FF4FC3F7" />
+
+                            <TextView
+                                android:textSize="10sp"
+                                android:textColor="?attr/panelTextColorSecondary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:text="速度色块" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </HorizontalScrollView>
 
                 <!-- Scale control -->
                 <LinearLayout

@@ -35,6 +35,8 @@ Navi-Link/
 │   │   │   ├── NormalNaviWindow.java        # 常规导航窗口实现
 │   │   │   ├── MinimalNaviWindow.java       # 灵动岛导航窗口实现
 │   │   │   ├── FullNaviWindow.java          # 全数据导航窗口实现
+│   │   │   ├── RibbonNaviWindow.java        # 丝带导航窗口实现（左色块 + 右侧信息区）
+│   │   │   ├── RibbonCruiseWindow.java      # 丝带巡航窗口实现（左色块显示车速）
 │   │   │   ├── LaneLineView.java            # 车道线自定义组件
 │   │   │   ├── TmcProgressBar.java          # TMC路况进度条自定义组件
 │   │   │   └── CrashHandler.java            # 全局异常捕获处理器
@@ -46,6 +48,8 @@ Navi-Link/
 │   │   │   │   ├── layout_floating_navi_normal.xml             # 常规导航悬浮窗
 │   │   │   │   ├── layout_floating_navi_full.xml        # 全数据导航悬浮窗
 │   │   │   │   ├── layout_floating_navi_minimal.xml     # 灵动岛导航悬浮窗
+│   │   │   │   ├── layout_floating_navi_ribbon.xml      # 丝带导航悬浮窗
+│   │   │   │   ├── layout_floating_cruise_ribbon.xml    # 丝带巡航悬浮窗
 │   │   │   │   ├── layout_floating_traffic_light_group.xml  # 红绿灯胶囊组件
 │   │   │   │   ├── item_cruise_traffic_light.xml        # 巡航红绿灯单项
 │   │   │   │   ├── item_cruise_traffic_light_small.xml  # 巡航红绿灯小尺寸项
@@ -83,7 +87,7 @@ Navi-Link/
 | **只启动服务** | 有悬浮窗权限时，若服务未运行则静默启动服务 + Toast 提示；若已运行则仅提示。无权限时跳转配置页 |
 | **正常打开** | 直接进入 MainActivity 配置页 |
 
-### 2. 双模式五种窗口（工厂模式）
+### 2. 双模式八种窗口（工厂模式）
 
 应用通过 `FloatingWindowFactory` 工厂模式创建具体窗口实现，`FloatingWindowManager` 仅负责调度和生命周期管理：
 
@@ -91,12 +95,16 @@ Navi-Link/
 |------|---------|------|
 | **巡航模式** (MODE_CRUISE) | MinimalCruiseWindow | 灵动岛巡航：紧凑胶囊，速度 + 道路名 + 红绿灯 |
 | **巡航模式** (MODE_CRUISE) | NormalCruiseWindow | 常规巡航：矩形卡片，速度 + 限速 + 电子眼距离 + 道路名 + 车道线 + 红绿灯 |
+| **巡航模式** (MODE_CRUISE) | FullCruiseWindow | 全数据巡航：完整信息卡片 |
+| **巡航模式** (MODE_CRUISE) | RibbonCruiseWindow | 丝带巡航：左侧主题色块显示车速，右侧路名 + 电子眼/红绿灯 + 车道线 |
 | **导航模式** (MODE_NAVI) | NormalNaviWindow | 常规导航：转向图标 + 距离 + 道路名 + TMC进度条 + ETA + 出口信息 + 红绿灯 |
 | **导航模式** (MODE_NAVI) | MinimalNaviWindow | 灵动岛导航：紧凑布局，速度 + 转向图标 + 距离 + 道路名 + 红绿灯 |
 | **导航模式** (MODE_NAVI) | FullNaviWindow | 全数据导航：完整驾驶信息 + 车道线 + TMC进度条 + 出口信息 + 红绿灯 |
+| **导航模式** (MODE_NAVI) | RibbonNaviWindow | 丝带导航：左侧主题色块显示转向+距离，右侧路名 + 剩余概览 + ETA，底部 TMC 细条 |
 
-- **巡航模式**：无转向图标时默认进入，可在配置页选择灵动岛或常规样式
-- **导航模式**：接收到转向图标(ICON≠0)时自动切换，支持三种样式选择
+- **巡航模式**：无转向图标时默认进入，可在配置页选择四种样式之一
+- **导航模式**：接收到转向图标(ICON≠0)时自动切换，支持四种样式选择（样式卡片横向滚动）
+- **样式编码**：`0`=常规、`1`=灵动岛、`2`=全数据、`3`=丝带，导航与巡航各自独立持久化；新增样式只需扩展编码并注册到 `resolveLayoutRes` 与 `FloatingWindowFactory`
 
 ### 3. 红绿灯实时显示
 
@@ -143,7 +151,7 @@ Navi-Link/
 
 - **启动方式**：只启动服务 / 正常打开配置页
 - **主题色**：13种预设颜色可选（黑/蓝/浅蓝/橙/粉红/紫/深橙/青绿/朱红/翡翠/靛蓝/琥珀/棕色），自动计算文字对比度，启动方式卡片和样式卡片同步跟随
-- **缩放**：0.5x ~ 2.0x 无极滑块调节，采用**物理内容缩放**方案；**三种导航样式独立记忆缩放值**，切换时自动恢复
+- **缩放**：0.5x ~ 2.0x 无极滑块调节，采用**物理内容缩放**方案；**四种样式独立记忆缩放值**（`scale_normal`/`scale_minimal`/`scale_full`/`scale_ribbon`），切换时自动恢复
 - **悬浮窗点击**：点击悬浮窗快捷打开设置页
 - **拖拽定位**：悬浮窗可自由拖拽，长按 500ms 锁定/解锁位置
 - **配置持久化**：所有设置通过 `SharedPreferences` 保存
@@ -202,7 +210,9 @@ Navi-Link/
 │      │         ├── NormalCruiseWindow   (常规巡航)             │
 │      │         ├── NormalNaviWindow     (常规导航)             │
 │      │         ├── MinimalNaviWindow    (灵动岛导航)           │
-│      │         └── FullNaviWindow       (全数据导航)           │
+│      │         ├── FullNaviWindow       (全数据导航)           │
+│      │         ├── RibbonNaviWindow     (丝带导航)             │
+│      │         └── RibbonCruiseWindow   (丝带巡航)             │
 │      │                                                       │
 │      └── activeWindow: BaseFloatingWindow                    │
 │            │                                                 │
@@ -257,6 +267,8 @@ FloatingWindowFactory.createWindow(currentMode, styleMode, context, inflated)
 | [NormalNaviWindow](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/NormalNaviWindow.java) | 318 | 常规导航窗口：转向图标 + 距离 + 道路名 + TMC进度条 + ETA + 出口信息 + 红绿灯 |
 | [MinimalNaviWindow](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/MinimalNaviWindow.java) | 211 | 灵动岛导航窗口：紧凑布局，速度 + 转向 + 距离 + 道路名 + 红绿灯 |
 | [FullNaviWindow](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/FullNaviWindow.java) | 341 | 全数据导航窗口：完整驾驶信息 + 车道线 + TMC进度条 + 出口信息 + 红绿灯 |
+| [RibbonNaviWindow](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/RibbonNaviWindow.java) | 304 | 丝带导航窗口：左侧主题色块承载转向+距离（文字按色块明度自动黑白），右侧路名 + 剩余概览 + ETA + 红绿灯倒计时角标，车道线/区间测速/TMC 按需展开 |
+| [RibbonCruiseWindow](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/RibbonCruiseWindow.java) | 311 | 丝带巡航窗口：左侧主题色块显示车速（超速变红闪烁），右侧路名 + 电子眼/红绿灯（同屏只留其一）+ 车道线 |
 | [LaneLineView](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/LaneLineView.java) | 218 | 车道线自定义组件，解析 `EXTRA_DRIVE_WAY` 数据动态渲染车道图标 |
 | [TmcProgressBar](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/TmcProgressBar.java) | 178 | TMC路况进度条自定义组件，分段彩色绘制 + 当前位置标记 |
 | [CrashHandler](file:///d:/AndroidStudioProjects/Navi-Link/app/src/main/java/com/navi/link/CrashHandler.java) | 185 | 全局异常捕获，保存崩溃日志到本地，自动清理旧日志 |
@@ -324,7 +336,7 @@ FloatingWindowFactory.createWindow(currentMode, styleMode, context, inflated)
 - 同时缩放 `GradientDrawable` 背景的圆角半径（`cornerRadius` / `cornerRadii`），保持视觉比例一致
 - 窗口始终 `WRAP_CONTENT`，由缩放后的内容自然撑开，无需手动计算窗口尺寸
 - 缩放调节时通过 `recreateWindow()` 重建窗口，配合数据缓存恢复机制实现无闪烁切换
-- 三种导航样式和巡航模式**独立记忆缩放值**，切换时自动恢复
+- 四种样式（常规 / 灵动岛 / 全数据 / 丝带）和巡航模式**独立记忆缩放值**，切换时自动恢复
 
 ---
 

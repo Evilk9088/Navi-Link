@@ -88,10 +88,10 @@ public class FloatingWindowManager {
 
     // 状态
     private int currentMode = MODE_CRUISE;
-    private int styleMode = 0; // 0=normal, 1=minimal, 2=full (导航窗口)
-    private int cruiseStyleMode = 0; // 0=常规巡航, 1=灵动岛巡航, 2=全数据巡航
-    // 各模式独立缩放: [0]=常规/常规巡航, [1]=灵动岛/灵动岛巡航, [2]=全数据
-    private float[] scales = {1.0f, 1.0f, 1.0f};
+    private int styleMode = 0; // 0=normal, 1=minimal, 2=full, 3=ribbon (导航窗口)
+    private int cruiseStyleMode = 0; // 0=常规巡航, 1=灵动岛巡航, 2=全数据巡航, 3=丝带巡航
+    // 各模式独立缩放: [0]=常规/常规巡航, [1]=灵动岛/灵动岛巡航, [2]=全数据, [3]=丝带
+    private float[] scales = {1.0f, 1.0f, 1.0f, 1.0f};
     private int themeColor = 0xFF4FC3F7;
     private boolean isShowing = false;
     private boolean hasActiveData = false; // 是否收到过实际导航/巡航广播数据
@@ -250,6 +250,7 @@ public class FloatingWindowManager {
         scales[0] = sp.getFloat("scale_normal", 1.0f);
         scales[1] = sp.getFloat("scale_minimal", 1.0f);
         scales[2] = sp.getFloat("scale_full", 1.0f);
+        scales[3] = sp.getFloat("scale_ribbon", 1.0f);
         themeColor = sp.getInt("theme_color", 0xFF4FC3F7);
         savedPosX = sp.getInt("window_pos_x", -1);
         savedPosY = sp.getInt("window_pos_y", -1);
@@ -272,15 +273,16 @@ public class FloatingWindowManager {
         return isAutoCenteringEnabled && getScaleIndex() == 1;
     }
 
-    /** 当前模式对应的缩放索引: 常规/常规巡航=0, 灵动岛/灵动岛巡航=1, 全数据=2 */
+    /** 当前模式对应的缩放索引: 常规/常规巡航=0, 灵动岛/灵动岛巡航=1, 全数据=2, 丝带=3 */
     private int getScaleIndex() {
         if (currentMode == MODE_CRUISE) {
             if (cruiseStyleMode == 1) return 1; // 灵动岛巡航
             if (cruiseStyleMode == 2) return 2; // 全数据巡航
+            if (cruiseStyleMode == 3) return 3; // 丝带巡航
             return 0; // 常规巡航
         }
         if (styleMode == 0) return 0; // 常规
-        return styleMode; // 1=灵动岛, 2=全数据
+        return styleMode; // 1=灵动岛, 2=全数据, 3=丝带
     }
 
     public float getScale() {
@@ -292,6 +294,7 @@ public class FloatingWindowManager {
                 .putFloat("scale_normal", scales[0])
                 .putFloat("scale_minimal", scales[1])
                 .putFloat("scale_full", scales[2])
+                .putFloat("scale_ribbon", scales[3])
                 .putFloat("scale_cluster", clusterScale)
                 .apply();
     }
@@ -620,18 +623,7 @@ public class FloatingWindowManager {
         }
 
         int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
-        int layoutRes;
-        if (currentMode == MODE_NAVI) {
-            if (styleMode == 2) layoutRes = R.layout.layout_floating_navi_full;
-            else if (styleMode == 1) layoutRes = R.layout.layout_floating_navi_minimal;
-            else layoutRes = R.layout.layout_floating_navi_normal;
-        } else {
-            layoutRes = effectiveStyle == 1
-                    ? R.layout.layout_floating_cruise_minimal
-                    : effectiveStyle == 2
-                    ? R.layout.layout_floating_cruise_full
-                    : R.layout.layout_floating_cruise_normal;
-        }
+        int layoutRes = resolveLayoutRes(currentMode, styleMode, cruiseStyleMode);
 
         View inflated = LayoutInflater.from(context).inflate(layoutRes, null);
 
@@ -981,7 +973,7 @@ public class FloatingWindowManager {
         if (target == null) target = targetScale;
         if (target == null) target = root;
 
-        // 根据样式确定圆角: 灵动岛/灵动岛巡航=40dp, 常规/常规巡航/全数据=12dp
+        // 根据样式确定圆角: 灵动岛/灵动岛巡航=40dp, 常规/常规巡航/全数据/丝带=12dp
         int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
         boolean isIslandStyle = effectiveStyle == 1;
         int cornerDp = isIslandStyle ? 40 : 12;
@@ -1642,6 +1634,20 @@ public class FloatingWindowManager {
 //        trafficLightBeepPlayed = false;
 //    }
 
+    /** 按模式与样式解析窗口布局资源；主屏与副屏共用，避免两处分支漂移 */
+    private int resolveLayoutRes(int mode, int naviStyle, int cruiseStyle) {
+        if (mode == MODE_NAVI) {
+            if (naviStyle == 2) return R.layout.layout_floating_navi_full;
+            if (naviStyle == 1) return R.layout.layout_floating_navi_minimal;
+            if (naviStyle == 3) return R.layout.layout_floating_navi_ribbon;
+            return R.layout.layout_floating_navi_normal;
+        }
+        if (cruiseStyle == 1) return R.layout.layout_floating_cruise_minimal;
+        if (cruiseStyle == 2) return R.layout.layout_floating_cruise_full;
+        if (cruiseStyle == 3) return R.layout.layout_floating_cruise_ribbon;
+        return R.layout.layout_floating_cruise_normal;
+    }
+
     /** 应用自定义窗口宽度 */
     private void applyCustomWindowWidth(View inflated, int layoutRes) {
         String spKey = null;
@@ -1773,18 +1779,7 @@ public class FloatingWindowManager {
             }
 
             int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
-            int layoutRes;
-            if (currentMode == MODE_NAVI) {
-                if (styleMode == 2) layoutRes = R.layout.layout_floating_navi_full;
-                else if (styleMode == 1) layoutRes = R.layout.layout_floating_navi_minimal;
-                else layoutRes = R.layout.layout_floating_navi_normal;
-            } else {
-                layoutRes = effectiveStyle == 1
-                        ? R.layout.layout_floating_cruise_minimal
-                        : effectiveStyle == 2
-                        ? R.layout.layout_floating_cruise_full
-                        : R.layout.layout_floating_cruise_normal;
-            }
+            int layoutRes = resolveLayoutRes(currentMode, styleMode, cruiseStyleMode);
 
             View inflated = LayoutInflater.from(clusterContext).inflate(layoutRes, null);
             applyCustomWindowWidth(inflated, layoutRes);
