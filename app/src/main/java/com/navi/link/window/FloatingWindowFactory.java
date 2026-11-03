@@ -13,30 +13,13 @@ import com.navi.link.utils.*;
 import android.content.Context;
 import android.view.View;
 
+/**
+ * 窗口工厂：按样式编码从 {@link WindowStyles} 注册表取描述符并创建实例。
+ * 新增样式不需要改动本类。
+ */
 public class FloatingWindowFactory {
     public static BaseFloatingWindow createWindow(int currentMode, int styleMode, Context context, View floatingView) {
-        if (currentMode == FloatingWindowManager.MODE_CRUISE) {
-            if (styleMode == 1) {
-                return new MinimalCruiseWindow(context, floatingView);
-            } else if (styleMode == 2) {
-                return new FullCruiseWindow(context, floatingView);
-            } else if (styleMode == 3) {
-                return new RibbonCruiseWindow(context, floatingView);
-            } else {
-                return new NormalCruiseWindow(context, floatingView);
-            }
-        } else {
-            switch (styleMode) {
-                case 1:
-                    return new MinimalNaviWindow(context, floatingView);
-                case 2:
-                    return new FullNaviWindow(context, floatingView);
-                case 3:
-                    return new RibbonNaviWindow(context, floatingView);
-                case 0:
-                default:
-                    return new NormalNaviWindow(context, floatingView);
-            }
-        }
+        boolean isNavi = currentMode == FloatingWindowManager.MODE_NAVI;
+        return WindowStyles.byId(styleMode).create(isNavi, context, floatingView);
     }
 }

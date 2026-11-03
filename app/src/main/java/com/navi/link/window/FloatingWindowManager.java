@@ -41,6 +41,8 @@ import androidx.core.view.ViewCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class FloatingWindowManager {
 
     private static final long LIGHT_HIDE_TIMEOUT_MS = 5000;
@@ -89,11 +91,13 @@ public class FloatingWindowManager {
     // 状态
     private int currentMode = MODE_CRUISE;
     private int styleMode = 0; // 0=normal, 1=minimal, 2=full, 3=ribbon (导航窗口)
-    private int cruiseStyleMode = 0; // 0=常规巡航, 1=灵动岛巡航, 2=全数据巡航, 3=丝带巡航
-    // 各模式独立缩放: [0]=常规/常规巡航, [1]=灵动岛/灵动岛巡航, [2]=全数据, [3]=丝带
-    private float[] scales = {1.0f, 1.0f, 1.0f, 1.0f};
+    private int cruiseStyleMode = 0; // 取值由 WindowStyles 注册表定义
+    // 各模式独立缩放，下标与 WindowStyles 注册顺序一致
+    private float[] scales = new float[WindowStyles.count()];
     private int themeColor = 0xFF4FC3F7;
     private boolean isShowing = false;
+    /** 当前窗口是否为导航布局。由 recreateWindow 按布局解析结果记录，样式数量增加时无需再改判断 */
+    private boolean activeWindowIsNaviLayout = false;
     private boolean hasActiveData = false; // 是否收到过实际导航/巡航广播数据
     private boolean hasEverReceivedData = false; // 是否曾经收到过真实数据（10001/60073/12110）
     private float clusterScale = 1.0f;
@@ -245,12 +249,14 @@ public class FloatingWindowManager {
 
     private void loadPreferences() {
         SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
-        styleMode = sp.getInt("style_mode", sp.getBoolean("is_minimal_style", false) ? 1 : 0);
-        cruiseStyleMode = sp.getInt("cruise_style_mode", 0);
-        scales[0] = sp.getFloat("scale_normal", 1.0f);
-        scales[1] = sp.getFloat("scale_minimal", 1.0f);
-        scales[2] = sp.getFloat("scale_full", 1.0f);
-        scales[3] = sp.getFloat("scale_ribbon", 1.0f);
+        // 归一化到已注册编码：样式被删除后残留的旧编码会自动回退到默认样式
+        styleMode = WindowStyles.byId(
+                sp.getInt("style_mode", sp.getBoolean("is_minimal_style", false) ? 1 : 0)).id;
+        cruiseStyleMode = WindowStyles.byId(sp.getInt("cruise_style_mode", 0)).id;
+        List<WindowStyle> styles = WindowStyles.all();
+        for (int i = 0; i < styles.size(); i++) {
+            scales[i] = sp.getFloat(styles.get(i).scaleKey, 1.0f);
+        }
         themeColor = sp.getInt("theme_color", 0xFF4FC3F7);
         savedPosX = sp.getInt("window_pos_x", -1);
         savedPosY = sp.getInt("window_pos_y", -1);
@@ -273,16 +279,10 @@ public class FloatingWindowManager {
         return isAutoCenteringEnabled && getScaleIndex() == 1;
     }
 
-    /** 当前模式对应的缩放索引: 常规/常规巡航=0, 灵动岛/灵动岛巡航=1, 全数据=2, 丝带=3 */
+    /** 当前样式在注册表中的下标，用于取独立缩放值 */
     private int getScaleIndex() {
-        if (currentMode == MODE_CRUISE) {
-            if (cruiseStyleMode == 1) return 1; // 灵动岛巡航
-            if (cruiseStyleMode == 2) return 2; // 全数据巡航
-            if (cruiseStyleMode == 3) return 3; // 丝带巡航
-            return 0; // 常规巡航
-        }
-        if (styleMode == 0) return 0; // 常规
-        return styleMode; // 1=灵动岛, 2=全数据, 3=丝带
+        int styleId = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
+        return WindowStyles.indexOf(styleId);
     }
 
     public float getScale() {
@@ -290,13 +290,13 @@ public class FloatingWindowManager {
     }
 
     private void saveScalePreferences() {
-        context.getSharedPreferences("floating_config", Context.MODE_PRIVATE).edit()
-                .putFloat("scale_normal", scales[0])
-                .putFloat("scale_minimal", scales[1])
-                .putFloat("scale_full", scales[2])
-                .putFloat("scale_ribbon", scales[3])
-                .putFloat("scale_cluster", clusterScale)
-                .apply();
+        SharedPreferences.Editor editor = context
+                .getSharedPreferences("floating_config", Context.MODE_PRIVATE).edit();
+        List<WindowStyle> styles = WindowStyles.all();
+        for (int i = 0; i < styles.size(); i++) {
+            editor.putFloat(styles.get(i).scaleKey, scales[i]);
+        }
+        editor.putFloat("scale_cluster", clusterScale).apply();
     }
 
     public float getClusterScale() {
@@ -391,6 +391,7 @@ public class FloatingWindowManager {
                 }
                 floatingView = null;
                 isShowing = false;
+                activeWindowIsNaviLayout = false;
             }
             return;
         }
@@ -507,9 +508,7 @@ public class FloatingWindowManager {
     }
 
     public boolean isNaviWindowActive() {
-        return activeWindow instanceof NormalNaviWindow 
-                || activeWindow instanceof MinimalNaviWindow 
-                || activeWindow instanceof FullNaviWindow;
+        return activeWindowIsNaviLayout;
     }
 
     public int getCurrentMode() {
@@ -623,7 +622,9 @@ public class FloatingWindowManager {
         }
 
         int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
-        int layoutRes = resolveLayoutRes(currentMode, styleMode, cruiseStyleMode);
+        WindowStyle style = WindowStyles.byId(effectiveStyle);
+        int layoutRes = style.layoutRes(currentMode == MODE_NAVI);
+        activeWindowIsNaviLayout = (currentMode == MODE_NAVI);
 
         View inflated = LayoutInflater.from(context).inflate(layoutRes, null);
 
@@ -639,7 +640,7 @@ public class FloatingWindowManager {
                 FrameLayout.LayoutParams.WRAP_CONTENT));
 
         // 设置缩放目标
-        if (currentMode == MODE_NAVI && styleMode >= 1) {
+        if (currentMode == MODE_NAVI && style.scalable) {
             scaleTarget = inflated;
         } else {
             scaleTarget = null;
@@ -652,8 +653,7 @@ public class FloatingWindowManager {
         }
 
         // 创建超速红色边框覆盖层（圆角跟随窗口样式）
-        boolean isIslandStyle = effectiveStyle == 1;
-        int cornerDp = isIslandStyle ? 40 : 12;
+        int cornerDp = style.cornerDp;
         int cornerPx = Math.round(dpToPx(cornerDp) * getScale());
         View borderView = new View(context);
         GradientDrawable borderDrawable = new GradientDrawable();
@@ -973,10 +973,9 @@ public class FloatingWindowManager {
         if (target == null) target = targetScale;
         if (target == null) target = root;
 
-        // 根据样式确定圆角: 灵动岛/灵动岛巡航=40dp, 常规/常规巡航/全数据/丝带=12dp
+        // 根据样式取窗口圆角（灵动岛 40dp，其余 12dp）
         int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
-        boolean isIslandStyle = effectiveStyle == 1;
-        int cornerDp = isIslandStyle ? 40 : 12;
+        int cornerDp = WindowStyles.byId(effectiveStyle).cornerDp;
         int cornerPx = Math.round(dpToPx(cornerDp) * getScale());
 
         SharedPreferences sp = context.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
@@ -1634,20 +1633,6 @@ public class FloatingWindowManager {
 //        trafficLightBeepPlayed = false;
 //    }
 
-    /** 按模式与样式解析窗口布局资源；主屏与副屏共用，避免两处分支漂移 */
-    private int resolveLayoutRes(int mode, int naviStyle, int cruiseStyle) {
-        if (mode == MODE_NAVI) {
-            if (naviStyle == 2) return R.layout.layout_floating_navi_full;
-            if (naviStyle == 1) return R.layout.layout_floating_navi_minimal;
-            if (naviStyle == 3) return R.layout.layout_floating_navi_ribbon;
-            return R.layout.layout_floating_navi_normal;
-        }
-        if (cruiseStyle == 1) return R.layout.layout_floating_cruise_minimal;
-        if (cruiseStyle == 2) return R.layout.layout_floating_cruise_full;
-        if (cruiseStyle == 3) return R.layout.layout_floating_cruise_ribbon;
-        return R.layout.layout_floating_cruise_normal;
-    }
-
     /** 应用自定义窗口宽度 */
     private void applyCustomWindowWidth(View inflated, int layoutRes) {
         String spKey = null;
@@ -1779,7 +1764,8 @@ public class FloatingWindowManager {
             }
 
             int effectiveStyle = currentMode == MODE_CRUISE ? cruiseStyleMode : styleMode;
-            int layoutRes = resolveLayoutRes(currentMode, styleMode, cruiseStyleMode);
+            WindowStyle clusterStyle = WindowStyles.byId(effectiveStyle);
+            int layoutRes = clusterStyle.layoutRes(currentMode == MODE_NAVI);
 
             View inflated = LayoutInflater.from(clusterContext).inflate(layoutRes, null);
             applyCustomWindowWidth(inflated, layoutRes);
@@ -1792,7 +1778,7 @@ public class FloatingWindowManager {
                     FrameLayout.LayoutParams.WRAP_CONTENT,
                     FrameLayout.LayoutParams.WRAP_CONTENT));
 
-            if (currentMode == MODE_NAVI && styleMode >= 1) {
+            if (currentMode == MODE_NAVI && clusterStyle.scalable) {
                 clusterScaleTarget = inflated;
             } else {
                 clusterScaleTarget = null;
@@ -1804,8 +1790,7 @@ public class FloatingWindowManager {
             }
 
             // 创建超速红色边框覆盖层（圆角跟随窗口样式，与主屏逻辑一致）
-            boolean clusterIsIslandStyle = effectiveStyle == 1;
-            int clusterCornerDp = clusterIsIslandStyle ? 40 : 12;
+            int clusterCornerDp = clusterStyle.cornerDp;
             int clusterCornerPx = Math.round(dpToPx(clusterCornerDp) * getClusterScale());
             View clusterBorderView = new View(clusterContext);
             GradientDrawable clusterBorderDrawable = new GradientDrawable();

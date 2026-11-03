@@ -28,7 +28,9 @@ Navi-Link/
 │   │   │   ├── AutoMapService.java          # 前台服务（维持悬浮窗生命周期）
 │   │   │   ├── AmapNaviReceiver.java        # 广播接收器（解析高德导航数据）
 │   │   │   ├── FloatingWindowManager.java   # 悬浮窗管理器（窗口调度 + 生命周期）
-│   │   │   ├── FloatingWindowFactory.java   # 窗口工厂（按模式+样式创建具体窗口）
+│   │   │   ├── FloatingWindowFactory.java   # 窗口工厂（查注册表创建窗口）
+│   │   │   ├── WindowStyles.java            # 样式注册表（增减样式的唯一入口）
+│   │   │   ├── WindowStyle.java             # 样式描述符（布局/缩放key/圆角/构造器）
 │   │   │   ├── BaseFloatingWindow.java      # 窗口抽象基类（公共方法 + 接口定义）
 │   │   │   ├── MinimalCruiseWindow.java     # 灵动岛巡航窗口实现
 │   │   │   ├── NormalCruiseWindow.java      # 常规巡航窗口实现
@@ -104,7 +106,16 @@ Navi-Link/
 
 - **巡航模式**：无转向图标时默认进入，可在配置页选择四种样式之一
 - **导航模式**：接收到转向图标(ICON≠0)时自动切换，支持四种样式选择（样式卡片横向滚动）
-- **样式编码**：`0`=常规、`1`=灵动岛、`2`=全数据、`3`=丝带，导航与巡航各自独立持久化；新增样式只需扩展编码并注册到 `resolveLayoutRes` 与 `FloatingWindowFactory`
+
+#### 样式框架（增减样式的唯一入口）
+
+所有样式差异收敛在 `WindowStyles` 注册表里，一条记录描述一个样式：编码、名称、副标题、导航/巡航两套布局、缩放偏好 key、窗口圆角、是否支持缩放、以及窗口实现类的构造器。
+
+**新增一款样式**：新增两个 layout + 一个继承 `BaseFloatingWindow` 的实现类，然后往 `WindowStyles.REGISTRY` 追加一条记录 —— 工厂、布局解析、缩放记忆、设置页卡片会自动跟上，无需改动其它文件。
+
+**删除一款样式**：直接删掉那条记录。用户偏好里残留的旧编码会在 `loadPreferences()` 里被归一化回默认样式（`WindowStyles.DEFAULT_ID`），不会崩溃或出现空窗口。
+
+注意 `id` 是持久化编码（`style_mode` / `cruise_style_mode`），已发布的编号不要复用给新样式。
 
 ### 3. 红绿灯实时显示
 

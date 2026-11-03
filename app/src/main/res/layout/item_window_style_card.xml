@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  单个窗口样式卡片。由 SystemAppearanceDelegate 按 WindowStyles 注册表动态生成，
+  卡片文案与点击行为都在代码里绑定；新增样式不需要复制本文件。
+-->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:focusable="true"
+    android:clickable="true"
+    android:layout_width="128dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="6dp"
+    app:cardBackgroundColor="?attr/panelCardBgColor"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/panelCardStrokeColor"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/rb_style"
+            android:textSize="13sp"
+            android:textColor="?attr/panelTextColorPrimary"
+            android:clickable="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:buttonTint="#FF4FC3F7" />
+
+        <TextView
+            android:id="@+id/tv_style_subtitle"
+            android:textSize="10sp"
+            android:textColor="?attr/panelTextColorSecondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

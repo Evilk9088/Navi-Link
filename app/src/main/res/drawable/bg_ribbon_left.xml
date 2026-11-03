@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  丝带款左侧色块。只做左上圆角：
+  底部若出现 TMC 细条，色块不在窗口最底部，做圆角会露出缺口；
+  真正位于底部时由 root_layout 的 clipToOutline 统一裁切。
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="#FF0099FF" />
-    <corners
-        android:topLeftRadius="12dp"
-        android:bottomLeftRadius="12dp" />
+    <corners android:topLeftRadius="12dp" />
 </shape>

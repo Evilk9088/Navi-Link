@@ -245,7 +245,7 @@ public class RibbonCruiseWindow extends BaseFloatingWindow {
                 drawable.setShape(GradientDrawable.RECTANGLE);
                 drawable.setColor(themeColor);
                 float r = dpToPx(12);
-                drawable.setCornerRadii(new float[]{r, r, 0, 0, 0, 0, r, r});
+                drawable.setCornerRadii(new float[]{r, r, 0, 0, 0, 0, 0, 0});
                 llRibbonLeft.setBackground(drawable);
             }
         }

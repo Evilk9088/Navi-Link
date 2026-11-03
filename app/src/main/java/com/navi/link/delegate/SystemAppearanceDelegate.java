@@ -3,9 +3,12 @@ package com.navi.link.delegate;
 import com.navi.link.R;
 import com.navi.link.activity.MainActivity;
 import com.navi.link.window.FloatingWindowManager;
+import com.navi.link.window.WindowStyle;
+import com.navi.link.window.WindowStyles;
 
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -15,14 +18,20 @@ import com.navi.link.view.SwitchButton;
 import androidx.core.graphics.drawable.DrawableCompat;
 import com.google.android.material.card.MaterialCardView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SystemAppearanceDelegate {
     private final MainActivity activity;
 
-    private MaterialCardView cardNormal, cardMinimal, cardFull, cardRibbon;
-    private RadioButton rbNormal, rbMinimal, rbFull, rbRibbon;
-    
-    private MaterialCardView cardCruiseNormal, cardCruiseMinimal, cardCruiseFull, cardCruiseRibbon;
-    private RadioButton rbCruiseNormal, rbCruiseMinimal, rbCruiseFull, rbCruiseRibbon;
+    /** 样式卡片按 WindowStyles 注册表动态生成，增减样式无需改本类 */
+    private LinearLayout llNaviStyleContainer, llCruiseStyleContainer;
+    private final List<MaterialCardView> naviStyleCards = new ArrayList<>();
+    private final List<RadioButton> naviStyleRadios = new ArrayList<>();
+    private final List<WindowStyle> naviStyleList = new ArrayList<>();
+    private final List<MaterialCardView> cruiseStyleCards = new ArrayList<>();
+    private final List<RadioButton> cruiseStyleRadios = new ArrayList<>();
+    private final List<WindowStyle> cruiseStyleList = new ArrayList<>();
     
     private MaterialCardView cardDayNightFollow, cardDayNightDay, cardDayNightNight;
     private RadioButton rbDayNightFollow, rbDayNightDay, rbDayNightNight;
@@ -53,25 +62,9 @@ public class SystemAppearanceDelegate {
     }
 
     public void initViews() {
-        cardNormal = activity.findViewById(R.id.card_normal);
-        cardMinimal = activity.findViewById(R.id.card_minimal);
-        cardFull = activity.findViewById(R.id.card_full);
-        
-        rbNormal = activity.findViewById(R.id.rb_normal);
-        rbMinimal = activity.findViewById(R.id.rb_minimal);
-        rbFull = activity.findViewById(R.id.rb_full);
-        cardRibbon = activity.findViewById(R.id.card_ribbon);
-        rbRibbon = activity.findViewById(R.id.rb_ribbon);
-        
-        cardCruiseNormal = activity.findViewById(R.id.card_cruise_normal);
-        cardCruiseMinimal = activity.findViewById(R.id.card_cruise_minimal);
-        cardCruiseFull = activity.findViewById(R.id.card_cruise_full);
-        cardCruiseRibbon = activity.findViewById(R.id.card_cruise_ribbon);
-        
-        rbCruiseNormal = activity.findViewById(R.id.rb_cruise_normal);
-        rbCruiseMinimal = activity.findViewById(R.id.rb_cruise_minimal);
-        rbCruiseFull = activity.findViewById(R.id.rb_cruise_full);
-        rbCruiseRibbon = activity.findViewById(R.id.rb_cruise_ribbon);
+        llNaviStyleContainer = activity.findViewById(R.id.ll_navi_style_container);
+        llCruiseStyleContainer = activity.findViewById(R.id.ll_cruise_style_container);
+        buildStyleCards();
 
         cardDayNightFollow = activity.findViewById(R.id.card_day_night_follow);
         cardDayNightDay = activity.findViewById(R.id.card_day_night_day);
@@ -118,21 +111,62 @@ public class SystemAppearanceDelegate {
         
         setupListeners();
     }
-    
+
+    /** 按 WindowStyles 注册表生成导航 / 巡航两组样式卡片 */
+    private void buildStyleCards() {
+        naviStyleCards.clear();
+        naviStyleRadios.clear();
+        naviStyleList.clear();
+        cruiseStyleCards.clear();
+        cruiseStyleRadios.clear();
+        cruiseStyleList.clear();
+
+        if (llNaviStyleContainer != null) {
+            llNaviStyleContainer.removeAllViews();
+        }
+        if (llCruiseStyleContainer != null) {
+            llCruiseStyleContainer.removeAllViews();
+        }
+
+        for (WindowStyle style : WindowStyles.all()) {
+            addStyleCard(llNaviStyleContainer, naviStyleCards, naviStyleRadios, naviStyleList, style, true);
+            addStyleCard(llCruiseStyleContainer, cruiseStyleCards, cruiseStyleRadios, cruiseStyleList, style, false);
+        }
+    }
+
+    private void addStyleCard(LinearLayout container,
+                              List<MaterialCardView> cards,
+                              List<RadioButton> radios,
+                              List<WindowStyle> styles,
+                              WindowStyle style,
+                              boolean isNavi) {
+        if (container == null) return;
+        View item = LayoutInflater.from(activity).inflate(R.layout.item_window_style_card, container, false);
+        MaterialCardView card = (MaterialCardView) item;
+        RadioButton radio = item.findViewById(R.id.rb_style);
+        TextView subtitle = item.findViewById(R.id.tv_style_subtitle);
+
+        String suffix = isNavi ? "导航" : "巡航";
+        radio.setText(style.name + suffix);
+        subtitle.setText(style.subtitle);
+        card.setOnClickListener(v -> {
+            if (isNavi) {
+                activity.selectStyle(style.id);
+            } else {
+                activity.selectCruiseStyle(style.id);
+            }
+        });
+
+        container.addView(item);
+        cards.add(card);
+        radios.add(radio);
+        styles.add(style);
+    }
+
     public void setupListeners() {
         if (cardServiceOnly != null) cardServiceOnly.setOnClickListener(v -> activity.selectStartupMode(1));
         if (cardNormalStart != null) cardNormalStart.setOnClickListener(v -> activity.selectStartupMode(0));
         if (cardStartAmap != null) cardStartAmap.setOnClickListener(v -> activity.selectStartupMode(2));
-        
-        if (cardNormal != null) cardNormal.setOnClickListener(v -> activity.selectStyle(0));
-        if (cardMinimal != null) cardMinimal.setOnClickListener(v -> activity.selectStyle(1));
-        if (cardFull != null) cardFull.setOnClickListener(v -> activity.selectStyle(2));
-        if (cardRibbon != null) cardRibbon.setOnClickListener(v -> activity.selectStyle(3));
-        
-        if (cardCruiseNormal != null) cardCruiseNormal.setOnClickListener(v -> activity.selectCruiseStyle(0));
-        if (cardCruiseMinimal != null) cardCruiseMinimal.setOnClickListener(v -> activity.selectCruiseStyle(1));
-        if (cardCruiseFull != null) cardCruiseFull.setOnClickListener(v -> activity.selectCruiseStyle(2));
-        if (cardCruiseRibbon != null) cardCruiseRibbon.setOnClickListener(v -> activity.selectCruiseStyle(3));
 
         if (cardDayNightFollow != null) cardDayNightFollow.setOnClickListener(v -> activity.selectDayNightOption(0));
         if (cardDayNightDay != null) cardDayNightDay.setOnClickListener(v -> activity.selectDayNightOption(1));
@@ -292,31 +326,28 @@ public class SystemAppearanceDelegate {
     }
     
     public void updateStyleSelection() {
-        if (rbNormal != null) rbNormal.setChecked(activity.styleMode == 0);
-        if (rbMinimal != null) rbMinimal.setChecked(activity.styleMode == 1);
-        if (rbFull != null) rbFull.setChecked(activity.styleMode == 2);
-        if (rbRibbon != null) rbRibbon.setChecked(activity.styleMode == 3);
-        
-        int accentColor = activity.getAccentColor();
-        int defaultStroke = activity.getThemeColorAttr(R.attr.panelCardStrokeColor);
-        if (cardNormal != null) cardNormal.setStrokeColor(activity.styleMode == 0 ? accentColor : defaultStroke);
-        if (cardMinimal != null) cardMinimal.setStrokeColor(activity.styleMode == 1 ? accentColor : defaultStroke);
-        if (cardFull != null) cardFull.setStrokeColor(activity.styleMode == 2 ? accentColor : defaultStroke);
-        if (cardRibbon != null) cardRibbon.setStrokeColor(activity.styleMode == 3 ? accentColor : defaultStroke);
+        refreshStyleSelection(naviStyleCards, naviStyleRadios, naviStyleList, activity.styleMode);
     }
     
     public void updateCruiseStyleSelection() {
-        if (rbCruiseNormal != null) rbCruiseNormal.setChecked(activity.cruiseStyleMode == 0);
-        if (rbCruiseMinimal != null) rbCruiseMinimal.setChecked(activity.cruiseStyleMode == 1);
-        if (rbCruiseFull != null) rbCruiseFull.setChecked(activity.cruiseStyleMode == 2);
-        if (rbCruiseRibbon != null) rbCruiseRibbon.setChecked(activity.cruiseStyleMode == 3);
-        
+        refreshStyleSelection(cruiseStyleCards, cruiseStyleRadios, cruiseStyleList, activity.cruiseStyleMode);
+    }
+
+    private void refreshStyleSelection(List<MaterialCardView> cards,
+                                       List<RadioButton> radios,
+                                       List<WindowStyle> styles,
+                                       int selectedId) {
         int accentColor = activity.getAccentColor();
         int defaultStroke = activity.getThemeColorAttr(R.attr.panelCardStrokeColor);
-        if (cardCruiseNormal != null) cardCruiseNormal.setStrokeColor(activity.cruiseStyleMode == 0 ? accentColor : defaultStroke);
-        if (cardCruiseMinimal != null) cardCruiseMinimal.setStrokeColor(activity.cruiseStyleMode == 1 ? accentColor : defaultStroke);
-        if (cardCruiseFull != null) cardCruiseFull.setStrokeColor(activity.cruiseStyleMode == 2 ? accentColor : defaultStroke);
-        if (cardCruiseRibbon != null) cardCruiseRibbon.setStrokeColor(activity.cruiseStyleMode == 3 ? accentColor : defaultStroke);
+        for (int i = 0; i < styles.size(); i++) {
+            boolean checked = styles.get(i).id == selectedId;
+            if (i < radios.size() && radios.get(i) != null) {
+                radios.get(i).setChecked(checked);
+            }
+            if (i < cards.size() && cards.get(i) != null) {
+                cards.get(i).setStrokeColor(checked ? accentColor : defaultStroke);
+            }
+        }
     }
 
     public void updateDayNightSelection() {
@@ -409,18 +440,6 @@ public class SystemAppearanceDelegate {
         if (cardServiceOnly != null) cardServiceOnly.setStrokeColor(mode == 1 ? accentColor : Color.parseColor("#444444"));
         if (cardStartAmap != null) cardStartAmap.setStrokeColor(mode == 2 ? accentColor : Color.parseColor("#444444"));
 
-        int sMode = activity.styleMode;
-        if (cardNormal != null) cardNormal.setStrokeColor(sMode == 0 ? accentColor : Color.parseColor("#444444"));
-        if (cardMinimal != null) cardMinimal.setStrokeColor(sMode == 1 ? accentColor : Color.parseColor("#444444"));
-        if (cardFull != null) cardFull.setStrokeColor(sMode == 2 ? accentColor : Color.parseColor("#444444"));
-        if (cardRibbon != null) cardRibbon.setStrokeColor(sMode == 3 ? accentColor : Color.parseColor("#444444"));
-
-        int cMode = activity.cruiseStyleMode;
-        if (cardCruiseNormal != null) cardCruiseNormal.setStrokeColor(cMode == 0 ? accentColor : Color.parseColor("#444444"));
-        if (cardCruiseMinimal != null) cardCruiseMinimal.setStrokeColor(cMode == 1 ? accentColor : Color.parseColor("#444444"));
-        if (cardCruiseFull != null) cardCruiseFull.setStrokeColor(cMode == 2 ? accentColor : Color.parseColor("#444444"));
-        if (cardCruiseRibbon != null) cardCruiseRibbon.setStrokeColor(cMode == 3 ? accentColor : Color.parseColor("#444444"));
-        
         RadioButton rbServiceOnlyView = activity.findViewById(R.id.rb_service_only);
         RadioButton rbNormalStartView = activity.findViewById(R.id.rb_normal_start);
         RadioButton rbStartAmapView = activity.findViewById(R.id.rb_start_amap);
@@ -428,24 +447,22 @@ public class SystemAppearanceDelegate {
         if (rbNormalStartView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbNormalStartView, accentColorStateList);
         if (rbStartAmapView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbStartAmapView, accentColorStateList);
 
-        RadioButton rbNormalView = activity.findViewById(R.id.rb_normal);
-        RadioButton rbMinimalView = activity.findViewById(R.id.rb_minimal);
-        RadioButton rbFullView = activity.findViewById(R.id.rb_full);
-        if (rbNormalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbNormalView, accentColorStateList);
-        if (rbMinimalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbMinimalView, accentColorStateList);
-        if (rbFullView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbFullView, accentColorStateList);
-        if (rbRibbon != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbRibbon, accentColorStateList);
-
-        RadioButton rbCruiseNormalView = activity.findViewById(R.id.rb_cruise_normal);
-        RadioButton rbCruiseMinimalView = activity.findViewById(R.id.rb_cruise_minimal);
-        RadioButton rbCruiseFullView = activity.findViewById(R.id.rb_cruise_full);
-        if (rbCruiseNormalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseNormalView, accentColorStateList);
-        if (rbCruiseMinimalView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseMinimalView, accentColorStateList);
-        if (rbCruiseFullView != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseFullView, accentColorStateList);
-        if (rbCruiseRibbon != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbCruiseRibbon, accentColorStateList);
+        // 样式卡片与单选项跟随主题色
+        tintStyleRadios(naviStyleRadios, accentColorStateList);
+        tintStyleRadios(cruiseStyleRadios, accentColorStateList);
+        updateStyleSelection();
+        updateCruiseStyleSelection();
 
         if (rbDayNightFollow != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbDayNightFollow, accentColorStateList);
         if (rbDayNightDay != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbDayNightDay, accentColorStateList);
         if (rbDayNightNight != null) androidx.core.widget.CompoundButtonCompat.setButtonTintList(rbDayNightNight, accentColorStateList);
+    }
+
+    private void tintStyleRadios(List<RadioButton> radios, android.content.res.ColorStateList tint) {
+        for (RadioButton radio : radios) {
+            if (radio != null) {
+                androidx.core.widget.CompoundButtonCompat.setButtonTintList(radio, tint);
+            }
+        }
     }
 }
