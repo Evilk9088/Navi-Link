@@ -70,6 +70,15 @@ public final class WindowStyles {
                         ? new RibbonNaviWindow(context, view)
                         : new RibbonCruiseWindow(context, view)));
 
+        list.add(new WindowStyle(
+                4, "面板", "全数据面板",
+                R.layout.layout_floating_navi_panel,
+                R.layout.layout_floating_cruise_panel,
+                "scale_panel", 12, true,
+                (isNavi, context, view) -> isNavi
+                        ? new PanelNaviWindow(context, view)
+                        : new PanelCruiseWindow(context, view)));
+
         REGISTRY = Collections.unmodifiableList(list);
     }
 

@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/window_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/root_layout"
+        android:layout_width="360dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:clipToOutline="true"
+        android:background="@drawable/bg_floating_dark">
+
+        <!-- ============ 转向区：占整窗一半高度 ============ -->
+        <LinearLayout
+            android:id="@+id/ll_panel_turn"
+            android:layout_width="match_parent"
+            android:layout_height="112dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <LinearLayout
+                android:id="@+id/ll_panel_turn_box"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_panel_turn">
+
+                <ImageView
+                    android:id="@+id/iv_panel_turn"
+                    android:layout_width="66dp"
+                    android:layout_height="66dp"
+                    android:scaleType="centerInside"
+                    android:src="@mipmap/sou4_night_a530" />
+
+                <TextView
+                    android:id="@+id/tv_panel_exit_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:maxLines="1"
+                    android:text="出口32A"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="14dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tv_panel_dist_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:text="300"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="46sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_panel_dist_unit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginBottom="4dp"
+                        android:maxLines="1"
+                        android:text="米"
+                        android:textColor="#FF9E9E9E"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_panel_road"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="右转 · 进入金星路"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="19sp" />
+
+                <!-- 车道线（有数据时才占位） -->
+                <com.navi.link.view.LaneLineView
+                    android:id="@+id/lane_line_view_panel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:layout_marginTop="5dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/v_panel_divider_top"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#12FFFFFF" />
+
+        <!-- ============ 红绿灯独立一行（无灯时整行隐藏） ============ -->
+        <LinearLayout
+            android:id="@+id/ll_panel_light_row"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/iv_panel_light_dir"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="centerInside"
+                android:src="@mipmap/light_straight" />
+
+            <View
+                android:id="@+id/v_panel_light_dot"
+                android:layout_width="11dp"
+                android:layout_height="11dp"
+                android:layout_marginStart="7dp"
+                android:background="@drawable/bg_circle_white" />
+
+            <TextView
+                android:id="@+id/tv_panel_light_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:text="红灯"
+                android:textColor="#FFF09595"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_panel_light_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="25"
+                android:textColor="#FFFF6B6B"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_panel_light_unit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:text="秒"
+                android:textColor="#FFC08A8A"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/v_panel_light_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#12FFFFFF"
+            android:visibility="gone" />
+
+        <!-- ============ 数值行：车速 / 限速(或电子眼) / 剩余+到达 ============ -->
+        <LinearLayout
+            android:id="@+id/ll_panel_kpi_row"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingStart="12dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tv_panel_speed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:text="0"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginBottom="1dp"
+                        android:text="km/h"
+                        android:textColor="#FF8A8A8A"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="当前车速"
+                    android:textColor="#FF6E6E6E"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/v_panel_divider_kpi1"
+                android:layout_width="1dp"
+                android:layout_height="24dp"
+                android:background="#12FFFFFF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingStart="12dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tv_panel_limit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:text="--"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginBottom="1dp"
+                        android:text="km/h"
+                        android:textColor="#FF8A8A8A"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_panel_limit_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="道路限速"
+                    android:textColor="#FF6E6E6E"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/v_panel_divider_kpi2"
+                android:layout_width="1dp"
+                android:layout_height="24dp"
+                android:background="#12FFFFFF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:orientation="vertical"
+                android:paddingStart="12dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tv_panel_remain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
+                        android:text="--"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_panel_remain_unit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginBottom="1dp"
+                        android:text="公里"
+                        android:textColor="#FF8A8A8A"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_panel_eta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="--"
+                    android:textColor="#FF6E6E6E"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ============ 路况：复用原版 TMC 进度条 ============ -->
+        <com.navi.link.view.TmcProgressBar
+            android:id="@+id/tmc_progress_bar_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 面板款转向图标底板；颜色由 PanelNaviWindow 按主题色动态刷 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#260099FF" />
+    <stroke
+        android:width="1dp"
+        android:color="#800099FF" />
+    <corners android:radius="16dp" />
+</shape>
