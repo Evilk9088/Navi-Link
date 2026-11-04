@@ -3,13 +3,19 @@ package com.navi.link.delegate;
 import com.navi.link.R;
 import com.navi.link.activity.MainActivity;
 import com.navi.link.window.FloatingWindowManager;
+import com.navi.link.window.BaseFloatingWindow;
 import com.navi.link.window.WindowStyle;
 import com.navi.link.window.WindowStyles;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.SeekBar;
@@ -32,6 +38,16 @@ public class SystemAppearanceDelegate {
     private final List<MaterialCardView> cruiseStyleCards = new ArrayList<>();
     private final List<RadioButton> cruiseStyleRadios = new ArrayList<>();
     private final List<WindowStyle> cruiseStyleList = new ArrayList<>();
+
+    /** 样式预览容器：用该样式的真实布局 + 示例数据渲染缩略图 */
+    private FrameLayout flNaviStylePreview, flCruiseStylePreview;
+
+    private static final String PREVIEW_TMC_JSON =
+            "{\"total_distance\":12600,\"finish_distance\":3000,\"tmc_info\":["
+            + "{\"tmc_status\":1,\"tmc_segment_distance\":3000},"
+            + "{\"tmc_status\":2,\"tmc_segment_distance\":1500},"
+            + "{\"tmc_status\":4,\"tmc_segment_distance\":2000},"
+            + "{\"tmc_status\":1,\"tmc_segment_distance\":4000}]}";
     
     private MaterialCardView cardDayNightFollow, cardDayNightDay, cardDayNightNight;
     private RadioButton rbDayNightFollow, rbDayNightDay, rbDayNightNight;
@@ -64,6 +80,8 @@ public class SystemAppearanceDelegate {
     public void initViews() {
         llNaviStyleContainer = activity.findViewById(R.id.ll_navi_style_container);
         llCruiseStyleContainer = activity.findViewById(R.id.ll_cruise_style_container);
+        flNaviStylePreview = activity.findViewById(R.id.fl_navi_style_preview);
+        flCruiseStylePreview = activity.findViewById(R.id.fl_cruise_style_preview);
         buildStyleCards();
 
         cardDayNightFollow = activity.findViewById(R.id.card_day_night_follow);
@@ -145,6 +163,14 @@ public class SystemAppearanceDelegate {
         MaterialCardView card = (MaterialCardView) item;
         RadioButton radio = item.findViewById(R.id.rb_style);
         TextView subtitle = item.findViewById(R.id.tv_style_subtitle);
+
+        // 同一棵视图树里若存在重复 id，保存/恢复实例状态时按 id 索引会串味，
+        // 表现为「一张卡选中，所有卡都显示选中」。这里给每个实例分配唯一 id 并关掉状态保存。
+        card.setId(View.generateViewId());
+        radio.setId(View.generateViewId());
+        subtitle.setId(View.generateViewId());
+        radio.setSaveEnabled(false);
+        card.setSaveEnabled(false);
 
         String suffix = isNavi ? "导航" : "巡航";
         radio.setText(style.name + suffix);
@@ -327,10 +353,69 @@ public class SystemAppearanceDelegate {
     
     public void updateStyleSelection() {
         refreshStyleSelection(naviStyleCards, naviStyleRadios, naviStyleList, activity.styleMode);
+        renderStylePreview(flNaviStylePreview, activity.styleMode, true);
     }
     
     public void updateCruiseStyleSelection() {
         refreshStyleSelection(cruiseStyleCards, cruiseStyleRadios, cruiseStyleList, activity.cruiseStyleMode);
+        renderStylePreview(flCruiseStylePreview, activity.cruiseStyleMode, false);
+    }
+
+    /**
+     * 用该样式的真实布局 + 示例数据渲染一张缩略预览图。
+     * 直接 draw 到位图再交给 ImageView 缩放，避免把真实窗口视图塞进设置页导致测量/裁剪问题。
+     */
+    private void renderStylePreview(FrameLayout container, int styleId, boolean isNavi) {
+        if (container == null) return;
+        container.removeAllViews();
+        WindowStyle style = WindowStyles.byId(styleId);
+        BaseFloatingWindow window = null;
+        try {
+            View view = LayoutInflater.from(activity).inflate(style.layoutRes(isNavi), container, false);
+            window = style.create(isNavi, activity, view);
+
+            android.content.SharedPreferences sp =
+                    activity.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+            window.applyThemeColor(sp.getInt("theme_color", 0xFF4FC3F7));
+            window.applyDayNightTextColors(sp.getBoolean("is_night_mode", true));
+
+            if (isNavi) {
+                window.updateNaviInfo(4, "300", "米", "进", "右转 · 进入金星路",
+                        "12.6公里 · 14分钟", "15:32到", 50, 68, 80, 0, 0, 0,
+                        "", 3, 3, "居里夫人大道", 90);
+                window.updateTrafficLight(1, 4, 25);
+                window.updateTmcData(PREVIEW_TMC_JSON);
+            } else {
+                window.updateCruiseInfo(62, "居里夫人大道", 1, 80, 200, 90);
+            }
+
+            Bitmap bitmap = snapshotView(view);
+            if (bitmap == null) return;
+
+            ImageView image = new ImageView(activity);
+            image.setImageBitmap(bitmap);
+            image.setAdjustViewBounds(true);
+            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            container.addView(image, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT));
+        } catch (Throwable ignored) {
+        } finally {
+            if (window != null) window.onDestroy();
+        }
+    }
+
+    /** 离屏测量 + 手动 layout，再 draw 成位图 */
+    private Bitmap snapshotView(View view) {
+        view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        int width = view.getMeasuredWidth();
+        int height = view.getMeasuredHeight();
+        if (width <= 0 || height <= 0) return null;
+        view.layout(0, 0, width, height);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        view.draw(new Canvas(bitmap));
+        return bitmap;
     }
 
     private void refreshStyleSelection(List<MaterialCardView> cards,
