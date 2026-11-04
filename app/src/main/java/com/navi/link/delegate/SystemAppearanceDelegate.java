@@ -376,8 +376,13 @@ public class SystemAppearanceDelegate {
 
             android.content.SharedPreferences sp =
                     activity.getSharedPreferences("floating_config", Context.MODE_PRIVATE);
+            // 显式选了白天/夜间就按选项来；「跟随高德」才用当前实际状态
+            int dayNightOption = activity.dayNightOption;
+            boolean isNight = dayNightOption == 2
+                    || (dayNightOption != 1 && sp.getBoolean("is_night_mode", true));
             window.applyThemeColor(sp.getInt("theme_color", 0xFF4FC3F7));
-            window.applyDayNightTextColors(sp.getBoolean("is_night_mode", true));
+            window.applyDayNightTextColors(isNight);
+            applyPreviewBackground(view, style, isNight, sp);
 
             if (isNavi) {
                 window.updateNaviInfo(4, "300", "米", "进", "右转 · 进入金星路",
@@ -392,17 +397,53 @@ public class SystemAppearanceDelegate {
             Bitmap bitmap = snapshotView(view);
             if (bitmap == null) return;
 
+            // 缩略到固定宽度，避免真实尺寸预览把整页挤满
+            int density = (int) activity.getResources().getDisplayMetrics().density;
+            int screenWidth = activity.getResources().getDisplayMetrics().widthPixels;
+            int targetWidth = Math.min(260 * density, screenWidth - 96 * density);
+            int targetHeight = Math.round(targetWidth * (bitmap.getHeight() / (float) bitmap.getWidth()));
+
             ImageView image = new ImageView(activity);
             image.setImageBitmap(bitmap);
-            image.setAdjustViewBounds(true);
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            container.addView(image, new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT));
+            TextView caption = new TextView(activity);
+            caption.setText("样式预览 · 示例数据");
+            caption.setTextSize(10f);
+            caption.setTextColor(activity.getThemeColorAttr(R.attr.panelTextColorSecondary));
+
+            LinearLayout wrapper = new LinearLayout(activity);
+            wrapper.setOrientation(LinearLayout.VERTICAL);
+            wrapper.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+            wrapper.addView(caption);
+            // 图片单独包一层，保证宽度固定且居中
+            FrameLayout imageHolder = new FrameLayout(activity);
+            FrameLayout.LayoutParams imageLp = new FrameLayout.LayoutParams(targetWidth, targetHeight);
+            imageLp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+            imageHolder.addView(image, imageLp);
+            wrapper.addView(imageHolder, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, targetHeight));
+
+            container.addView(wrapper, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
         } catch (Throwable ignored) {
         } finally {
             if (window != null) window.onDestroy();
         }
+    }
+
+    /** 预览里的窗口底色跟正式悬浮窗保持一致（正式窗口由 FloatingWindowManager 刷背景） */
+    private void applyPreviewBackground(View root, WindowStyle style, boolean isNight,
+                                        android.content.SharedPreferences sp) {
+        View target = root.findViewById(R.id.root_layout);
+        if (target == null) return;
+        int bgColor = isNight
+                ? sp.getInt("bg_color_night", 0xCC121212)
+                : sp.getInt("bg_color_day", 0xE6F5F5F5);
+        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+        drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        drawable.setColor(bgColor);
+        drawable.setCornerRadius(style.cornerDp * activity.getResources().getDisplayMetrics().density);
+        target.setBackground(drawable);
     }
 
     /** 离屏测量 + 手动 layout，再 draw 成位图 */
